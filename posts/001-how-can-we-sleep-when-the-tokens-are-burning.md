@@ -3,6 +3,7 @@ title: How can we sleep when the tokens are burning
 vol: 1
 date: 2026-11-18
 author: Tuomas Taini
+play: play/tokens-burning.html
 summary: A late-night session on agent artifacts, observability, habits and progressive skills. Starts with file recovery, ends with ants.
 ---
 

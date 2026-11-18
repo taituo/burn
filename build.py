@@ -11,6 +11,7 @@ Each post is a markdown file in posts/ named NNN-slug.md with front matter:
     date: 2026-12-01
     author: Tuomas Taini
     summary: One or two sentences for the index card.
+    play: play/some-game.html   (optional: a game version of the post)
     ---
 """
 import html
@@ -78,6 +79,8 @@ def page(title, body, prefix, description=""):
   <span>Set in <a href="{GLOAM}">Gloam</a> &middot; <a href="{REPO}">Source</a></span>
 </div></footer>
 <script src="{prefix}assets/burn.js"></script>
+<script src="{prefix}play/assets/dither.js"></script>
+<script src="{prefix}assets/fire.js"></script>
 </body>
 </html>
 """
@@ -105,6 +108,7 @@ def main():
   <h1 class="mono">{html.escape(meta["title"])}</h1>
   <div class="meta mono">{metaline}</div>
   {f'<p class="sum">{html.escape(summary)}</p>' if summary else ''}
+  {f'<a class="btn mono" href="../{meta["play"]}">&#x25B6; Play this article</a>' if meta.get('play') else ''}
 </div>
 <article class="prose">
 {content}
@@ -119,12 +123,13 @@ def main():
     cards = []
     for slug, meta in sorted(posts, key=lambda p: p[1].get("date", ""), reverse=True):
         bits = [b for b in (vol(meta), meta.get("date", "")) if b]
-        cards.append(f"""<a class="px card" href="posts/{slug}.html">
+        play = f'<a class="btn mono" href="{meta["play"]}">&#x25B6; Play</a>' if meta.get("play") else ""
+        cards.append(f"""<div class="px card">
   <div class="meta mono">{' &middot; '.join(html.escape(b) for b in bits)}</div>
-  <h3 class="mono">{html.escape(meta["title"])}</h3>
+  <h3 class="mono"><a href="posts/{slug}.html">{html.escape(meta["title"])}</a></h3>
   <p>{html.escape(meta.get("summary", ""))}</p>
-  <span class="go mono">Read &rarr;</span>
-</a>""")
+  <div class="acts">{play}<a class="btn ghost mono" href="posts/{slug}.html">Read &rarr;</a></div>
+</div>""")
 
     index = f"""<main>
 <section class="wrap hero">
@@ -132,7 +137,7 @@ def main():
   <h1 class="mono">Ruthless experience of a <b>delusional</b> agentic engineer</h1>
   <p class="sub">Field notes from the token furnace: agents, harnesses, skills, and the ideas that show up at 23:00.</p>
 </section>
-<div class="embers" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+<canvas id="fire" class="fire" aria-hidden="true"></canvas>
 <section class="wrap" id="articles">
   <div class="list">
     <div class="sect mono">Articles &middot; {len(posts)}</div>

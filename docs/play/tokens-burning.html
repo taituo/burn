@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en" data-pal="ember">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tokens Burning: the game · Burn</title>
+<meta name="description" content="How can we sleep when the tokens are burning, played as a game. By Tuomas Taini.">
+<meta name="author" content="Tuomas Taini">
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="assets/gloam.css">
+<style>
+html,body{height:100%;overflow:hidden;background:#05040a}
+#stage{position:fixed;left:0;top:0;--u:2px;overflow:hidden}
+#bg{position:absolute;inset:0;width:100%;height:100%}
+.sl{position:absolute;inset:0;display:none}
+.sl.on{display:block}
+.b{position:absolute;left:calc(var(--x)*var(--u));top:calc(var(--y)*var(--u));width:calc(var(--w)*var(--u))}
+.p8{font-family:"Gloam Pico";font-size:calc(8*var(--u));line-height:calc(8*var(--u))}
+.p16{font-family:"Gloam Pico";font-size:calc(16*var(--u));line-height:calc(16*var(--u))}
+.p32{font-family:"Gloam Pico";font-size:calc(32*var(--u));line-height:calc(32*var(--u))}
+.m16{font-family:"Gloam Bone Mono";font-size:calc(16*var(--u));line-height:calc(16*var(--u))}
+.g16{font-size:calc(16*var(--u));line-height:calc(24*var(--u))}
+.g32{font-size:calc(32*var(--u));line-height:calc(40*var(--u))}
+.g48{font-size:calc(48*var(--u));line-height:calc(56*var(--u))}
+.g64{font-size:calc(64*var(--u));line-height:calc(72*var(--u))}
+.g96{font-size:calc(96*var(--u));line-height:calc(96*var(--u))}
+.bone{font-family:"Gloam Bone"}.bmono{font-family:"Gloam Bone Mono"}
+.ctr{text-align:center}
+.ink{color:#ebe3cf}.dim{color:#8d849b}.faint{color:#4a4256}.acc{color:var(--acc)}.hi{color:var(--hi)}.red{color:#e2453c}.grn{color:#9fd14f}
+.frag{visibility:hidden}.frag.in{visibility:visible;animation:pop .24s steps(3)}
+@keyframes pop{0%{transform:translateY(calc(6*var(--u)))}100%{transform:none}}
+.panel{box-shadow:0 0 0 var(--u) var(--acc),0 0 0 calc(2*var(--u)) #05040a;padding:calc(10*var(--u)) calc(12*var(--u))}
+.panel.dimb{box-shadow:0 0 0 var(--u) #3a3048,0 0 0 calc(2*var(--u)) #05040a}
+.tag{background:#05040a;padding:calc(3*var(--u)) calc(6*var(--u));display:inline-block}
+/* HUD */
+#hud{position:absolute;left:0;right:0;top:0;height:calc(24*var(--u));display:flex;align-items:center;justify-content:space-between;padding:0 calc(14*var(--u));z-index:5}
+#hud .hearts{font-size:calc(16*var(--u));line-height:calc(16*var(--u));letter-spacing:calc(2*var(--u))}
+#hud .coin{font-size:calc(16*var(--u));line-height:calc(16*var(--u));vertical-align:calc(-2*var(--u))}
+#foot{position:absolute;left:0;right:0;bottom:0;height:calc(20*var(--u));display:flex;align-items:center;justify-content:space-between;padding:0 calc(14*var(--u));z-index:6}
+#prog{font-family:"Gloam Bone Mono";font-size:calc(16*var(--u));line-height:calc(16*var(--u));color:var(--acc)}
+#prog span{color:#3a3048}
+#foot a{color:var(--acc);text-decoration:none;position:relative;z-index:7}
+/* parts */
+.enemy{display:flex;gap:calc(10*var(--u));align-items:baseline;margin-bottom:calc(10*var(--u))}
+.enemy .ic{font-family:"Gloam Lantern";color:#e2453c;flex:none}
+.loot{display:grid;grid-template-columns:calc(18*var(--u)) 1fr auto;align-items:baseline;margin-bottom:calc(8*var(--u))}
+.cards{display:grid;grid-template-columns:repeat(4,calc(84*var(--u)));gap:calc(8*var(--u))}
+.card{height:calc(64*var(--u));padding:calc(8*var(--u));box-shadow:0 0 0 var(--u) #3a3048;cursor:pointer;text-align:center}
+.card.sel{box-shadow:0 0 0 var(--u) var(--acc),0 0 0 calc(2*var(--u)) #05040a}
+.card .s{font-size:calc(32*var(--u));line-height:calc(32*var(--u))}
+.stat{display:grid;grid-template-columns:calc(64*var(--u)) 1fr;align-items:center;margin-bottom:calc(6*var(--u))}
+.stat i{display:block;height:calc(8*var(--u))}
+.hp{height:calc(10*var(--u));box-shadow:0 0 0 var(--u) #ebe3cf;position:relative}
+.hp i{position:absolute;inset:0 auto 0 0;width:100%;transition:width .4s steps(8)}
+.boss .sprite{transition:filter .3s steps(3)}
+.bubble{position:relative;padding:calc(12*var(--u)) calc(14*var(--u));background:#ebe3cf;color:#1a1420}
+.bubble::after{content:"";position:absolute;left:calc(-8*var(--u));top:calc(18*var(--u));border:calc(4*var(--u)) solid transparent;border-right-color:#ebe3cf;border-top-color:#ebe3cf}
+.var{display:grid;grid-template-columns:calc(34*var(--u)) 1fr auto;align-items:baseline;margin-bottom:calc(8*var(--u))}
+.meter{height:calc(10*var(--u));position:relative;box-shadow:0 0 0 var(--u) #3a3048}
+.meter i{position:absolute;inset:0 auto 0 0;width:0;transition:width .6s steps(12)}
+.agent .row{display:grid;grid-template-columns:calc(78*var(--u)) 1fr calc(28*var(--u));align-items:center;margin-top:calc(6*var(--u));gap:calc(6*var(--u))}
+.agent .bar{height:calc(8*var(--u));width:0;transition:width .7s steps(14)}
+#tap{position:fixed;inset:0;z-index:4}
+</style>
+</head>
+<body class="crt">
+<div id="stage">
+  <canvas id="bg"></canvas>
+  <div id="hud">
+    <span class="p16 ink" id="world">WORLD 1-1</span>
+    <span class="p16 ink"><span class="lan coin">&#xE002;</span> TOKENS <span class="acc" id="tok">0000000</span></span>
+    <span><span class="p16 ink">CTX </span><span class="hearts lan p-blood" data-pal="blood"><span class="lan" id="hearts">♥♥♥</span></span></span>
+  </div>
+
+  <!-- 1 TITLE -->
+  <section class="sl" data-bg="fire" data-w="WORLD 0-0">
+    <div class="b ctr p16 acc" style="--x:0;--y:56;--w:640">TUOMAS TAINI PRESENTS</div>
+    <div class="b ctr lan g64" style="--x:0;--y:80;--w:640">Tokens</div>
+    <div class="b ctr lan g64" style="--x:0;--y:148;--w:640">Burning</div>
+    <div class="b ctr" style="--x:0;--y:234;--w:640"><span class="g16 ink tag">how can we sleep when the tokens are burning</span></div>
+    <div class="b ctr p16 hi blink" style="--x:0;--y:276;--w:640">PRESS &#x25B6; TO START</div>
+  </section>
+
+  <!-- 2 PROBLEM -->
+  <section class="sl" data-bg="night" data-w="WORLD 1-1">
+    <div class="b p16 acc" style="--x:56;--y:52;--w:520">STAGE: THE PROBLEM</div>
+    <div class="b g32 ink" style="--x:56;--y:70;--w:540">Your agent has amnesia.</div>
+    <div class="b" style="--x:56;--y:122;--w:540">
+      <div class="enemy frag"><span class="ic g32">☠</span><div><div class="g16 ink">Forgets</div><div class="bone g16 dim">Every session starts from zero.</div></div></div>
+      <div class="enemy frag"><span class="ic g32">☠</span><div><div class="g16 ink">Repeats</div><div class="bone g16 dim">The same mistake, a hundred times.</div></div></div>
+      <div class="enemy frag"><span class="ic g32">☠</span><div><div class="g16 ink">Believes itself</div><div class="bone g16 dim">"I saved the file." It didn't.</div></div></div>
+    </div>
+  </section>
+
+  <!-- 3 RULE -->
+  <section class="sl" data-bg="cave" data-w="WORLD 1-2">
+    <div class="b p16 acc" style="--x:56;--y:52;--w:520">STAGE: THE RULE</div>
+    <div class="b ctr lan g96" style="--x:40;--y:110;--w:140">&#xE005;</div>
+    <div class="b" style="--x:210;--y:84;--w:390">
+      <div class="lan g48">Don't remember.</div>
+      <div class="lan g48">Look.</div>
+      <div class="bone g16 ink frag" style="margin-top:calc(16*var(--u))">The agent's reasoning is not the record of what happened. The environment is.</div>
+      <div class="p16 acc frag" style="margin-top:calc(14*var(--u))">3 RECORDS: INFERENCE &middot; EXECUTION &middot; ARTIFACTS</div>
+      <div class="bone g16 dim frag" style="margin-top:calc(8*var(--u))">None of them replaces the others.</div>
+    </div>
+  </section>
+
+  <!-- 4 LOOT -->
+  <section class="sl" data-bg="void" data-w="WORLD 2-1">
+    <div class="b p16 acc" style="--x:40;--y:44;--w:560">STAGE: LOOT YOU DIDN'T KNOW YOU DROPPED</div>
+    <div class="b panel dimb" style="--x:40;--y:74;--w:220">
+      <div class="p8 dim">THE TOOL SAID</div>
+      <div class="g32 ink" style="margin-top:calc(10*var(--u))">"success"</div>
+      <div class="bone g16 dim" style="margin-top:calc(8*var(--u))">That's all the agent saw.</div>
+    </div>
+    <div class="b panel" style="--x:290;--y:74;--w:310">
+      <div class="p8 acc" style="margin-bottom:calc(10*var(--u))">THE DISK SAYS</div>
+      <div class="loot"><span class="lan g16">&#x2726;</span><span class="bmono g16 ink">report.pdf</span><span class="p8 dim">EXPECTED</span></div>
+      <div class="loot frag"><span class="lan g16">&#x2726;</span><span class="bmono g16 ink">analysis.csv</span><span class="p8 hi">NEW ITEM</span></div>
+      <div class="loot frag"><span class="lan g16">&#x2726;</span><span class="bmono g16 ink">metadata.json</span><span class="p8 hi">NEW ITEM</span></div>
+      <div class="loot frag"><span class="lan g16">&#x2726;</span><span class="bmono g16 ink">cache/model.pkl</span><span class="p8 hi">NEW ITEM</span></div>
+    </div>
+    <div class="b frag" style="--x:40;--y:258;--w:560"><span class="g16 ink tag">An observability layer outside the model records the consequences.</span></div>
+    <div class="b frag" style="--x:40;--y:290;--w:560"><span class="p16 acc tag">THE TRANSCRIPT EXPLAINS. OBSERVABILITY REMEMBERS.</span></div>
+  </section>
+
+  <!-- 5 SWARM -->
+  <section class="sl" data-bg="swarm" data-w="WORLD 2-2">
+    <div class="b p16 acc" style="--x:40;--y:40;--w:560"><span class="tag">STAGE: THE SWARM</span></div>
+    <div class="b p16 dim" style="--x:40;--y:66;--w:240"><span class="tag">NO TRACES</span></div>
+    <div class="b p16 dim" style="--x:340;--y:66;--w:240"><span class="tag">TRACES</span></div>
+    <div class="b lan g32" style="--x:224;--y:76;--w:40">★</div>
+    <div class="b lan g32" style="--x:576;--y:62;--w:40">★</div>
+    <div class="b frag" style="--x:40;--y:286;--w:260"><span class="g16 ink tag">100 idiots.</span></div>
+    <div class="b frag" style="--x:470;--y:286;--w:140"><span class="g16 hi tag">A colony.</span></div>
+    <div class="b frag ctr" style="--x:40;--y:316;--w:560"><span class="p16 acc tag">STIGMERGY: THE MEMORY LIVES IN THE ENVIRONMENT</span></div>
+  </section>
+
+  <!-- 6 LAYERS -->
+  <section class="sl" data-bg="void" data-w="WORLD 3-1">
+    <div class="b p16 acc" style="--x:40;--y:44;--w:560">CHOOSE YOUR LAYER</div>
+    <div class="b bone g16 dim" style="--x:40;--y:62;--w:560">Same skill name, different parts, different rules for change.</div>
+    <div class="b cards" style="--x:40;--y:100;--w:360" id="cards"></div>
+    <div class="b panel dimb" style="--x:418;--y:100;--w:182" id="lstats"></div>
+  </section>
+
+  <!-- 7 OVERLOAD -->
+  <section class="sl" data-bg="night" data-w="WORLD 3-2">
+    <div class="b p16 acc" style="--x:40;--y:44;--w:560">STAGE: PROGRESSIVE OVERLOAD</div>
+    <div class="b ctr lan g64" style="--x:40;--y:78;--w:60">&#xE004;</div>
+    <div class="b" style="--x:118;--y:74;--w:320"><div class="bubble"><div class="g16">"The fix was good. Not reliable enough."</div></div></div>
+    <div class="b" style="--x:470;--y:80;--w:130"><div class="p8 dim">PRESSURE</div><div class="meter" style="margin-top:calc(6*var(--u))"><i id="press"></i></div></div>
+    <div class="b panel dimb" style="--x:40;--y:152;--w:400" id="vars">
+      <div class="var frag"><span class="p16 dim">v1</span><span class="bone g16 ink">wraps it in 12 retries</span><span class="p16 red">&#x2717; JUNK</span></div>
+      <div class="var frag"><span class="p16 dim">v2</span><span class="bone g16 ink">loosens the asserts</span><span class="p16 red">&#x2717; CAUGHT</span></div>
+      <div class="var frag"><span class="p16 dim">v3</span><span class="bone g16 ink">reads timeout from config</span><span class="p16 grn">&#x2713; KEPT</span></div>
+    </div>
+    <div class="b ctr lan g48 frag" style="--x:450;--y:170;--w:160">Lv. 2</div>
+    <div class="b frag" style="--x:40;--y:300;--w:560"><span class="bone g16 ink tag">Pressure makes variants. A filter the agent can't touch keeps the good one.</span></div>
+  </section>
+
+  <!-- 8 BOSS -->
+  <section class="sl boss" data-bg="blood" data-w="WORLD 4-1">
+    <div class="b p16 red" style="--x:56;--y:46;--w:520">!! BOSS FIGHT !!</div>
+    <div class="b" style="--x:56;--y:66;--w:270"><div class="g32 ink">Goodhart</div><div class="hp" style="margin-top:calc(8*var(--u))"><i id="bosshp" style="background:#e2453c"></i></div><div class="p8 dim" style="margin-top:calc(6*var(--u))" id="bosslbl">HP 100 / 100</div></div>
+    <div class="b ctr sprite" style="--x:350;--y:60;--w:240"><div class="g96 ink" id="bossA" style="filter:blur(3px);transform:scale(1.07)">10/10</div><div class="p8 dim" style="margin-top:calc(8*var(--u))">TESTS: PASSING (SOMEHOW)</div></div>
+    <div class="b" style="--x:56;--y:146;--w:280">
+      <div class="frag atk"><span class="p16 acc">&#x2694; ATTACK 1</span><div class="bone g16 ink">Hidden tests the agent never sees.</div></div>
+      <div class="frag atk" style="margin-top:calc(8*var(--u))"><span class="p16 acc">&#x2694; ATTACK 2</span><div class="bone g16 ink">Metrics the agent can't touch.</div></div>
+      <div class="frag atk" style="margin-top:calc(8*var(--u))"><span class="p16 acc">&#x2694; ATTACK 3</span><div class="bone g16 ink">A human clicks merge.</div></div>
+    </div>
+    <div class="b ctr lan g48 frag" style="--x:350;--y:224;--w:240" id="clear">Clear!</div>
+  </section>
+
+  <!-- 9 PRUNE -->
+  <section class="sl" data-bg="void" data-w="WORLD 4-2">
+    <div class="b p16 acc" style="--x:40;--y:44;--w:560">STAGE: HEAVY VS NAIVE</div>
+    <div class="b panel dimb agent" style="--x:40;--y:70;--w:270">
+      <div class="g16 ink">Heavy agent</div><div class="p8 dim" style="margin-top:calc(4*var(--u))">ALL THE STEERING EVER WRITTEN</div>
+      <div class="row"><span class="p8 dim">STEERING</span><i class="bar" data-p=".99"></i><span class="p8 ink">99</span></div>
+      <div class="row"><span class="p8 dim">JUNK</span><i class="bar" data-p=".87"></i><span class="p8 ink">87</span></div>
+      <div class="row"><span class="p8 dim">CONTEXT</span><i class="bar" data-p=".95"></i><span class="p8 ink">95</span></div>
+    </div>
+    <div class="b panel agent" style="--x:330;--y:70;--w:270">
+      <div class="g16 ink">Naive agent</div><div class="p8 dim" style="margin-top:calc(4*var(--u))">ARRIVES WITH NOTHING</div>
+      <div class="row"><span class="p8 dim">STEERING</span><i class="bar" data-p=".03"></i><span class="p8 ink">3</span></div>
+      <div class="row"><span class="p8 dim">JUNK</span><i class="bar" data-p="0"></i><span class="p8 ink">0</span></div>
+      <div class="row"><span class="p8 dim">CONTEXT</span><i class="bar" data-p=".12"></i><span class="p8 ink">12</span></div>
+    </div>
+    <div class="b frag" style="--x:40;--y:206;--w:560"><span class="g16 ink tag">What it trips over stays. What it never needed goes.</span></div>
+    <div class="b panel frag" style="--x:40;--y:250;--w:560;display:flex;gap:calc(14*var(--u));align-items:center">
+      <span class="lan g32">&#xE003;</span>
+      <div><div class="p16 acc">PROTECTED SET &middot; NEVER PRUNED</div><div class="bone g16 dim" style="margin-top:calc(4*var(--u))">Prod config, main branch, security rules. Only humans change these.</div></div>
+    </div>
+  </section>
+
+  <!-- 10 PROOF -->
+  <section class="sl" data-bg="chart" data-w="WORLD 5-1">
+    <div class="b p16 acc" style="--x:40;--y:40;--w:560">STAGE: PROOF</div>
+    <div class="b g32 ink" style="--x:40;--y:58;--w:560">Can't shout 10/10. Need proof.</div>
+    <div class="b p8 dim" style="--x:64;--y:116;--w:300">REPEATED MISTAKES</div>
+    <div class="b p8 dim" style="--x:300;--y:318;--w:90">SESSIONS &#x2192;</div>
+    <div class="b p8 dim" style="--x:300;--y:146;--w:120">STATIC: FLAT</div>
+    <div class="b p8 hi" style="--x:84;--y:292;--w:120">HABITS: FALLING</div>
+    <div class="b panel dimb" style="--x:420;--y:126;--w:180">
+      <div class="p8 acc" style="margin-bottom:calc(10*var(--u))">LEVELS</div>
+      <div class="frag"><div class="p16 ink">LV1</div><div class="bone g16 dim">Same bug, new names.</div></div>
+      <div class="frag" style="margin-top:calc(8*var(--u))"><div class="p16 ink">LV2</div><div class="bone g16 dim">Same fault, new component.</div></div>
+      <div class="frag" style="margin-top:calc(8*var(--u))"><div class="p16 ink">LV3</div><div class="bone g16 dim">New tasks. No regressions.</div></div>
+    </div>
+  </section>
+
+  <!-- 11 END -->
+  <section class="sl" data-bg="fire" data-w="WORLD 5-2">
+    <div class="b ctr lan g64" style="--x:0;--y:56;--w:640">Thanks for burning</div>
+    <div class="b ctr" style="--x:0;--y:142;--w:640"><span class="g16 ink tag">Idea &amp; words &middot; Tuomas Taini</span></div>
+    <div class="b ctr" style="--x:0;--y:172;--w:640"><span class="p16 acc tag">VOL. 2: WHEN THERE'S DATA</span></div>
+    <div class="b ctr" style="--x:0;--y:212;--w:640"><span class="p32 hi tag" id="cont">CONTINUE? 9</span></div>
+    <div class="b ctr" style="--x:0;--y:262;--w:640"><span class="p16 ink tag" id="cont2">&#x25C0; TO PLAY AGAIN</span></div>
+  </section>
+
+  <div id="foot"><span id="prog"></span><span class="p16 dim"><span class="tag" style="padding:0">&#x25C0; &#x25B6; &middot; P PALETTE &middot; M SOUND &middot; <a href="../posts/how-can-we-sleep-when-the-tokens-are-burning.html">READ</a> &middot; <a href="../index.html">EXIT</a></span></span></div>
+</div>
+<div id="tap"></div>
+
+<script src="assets/dither.js"></script>
+<script>
+(() => {
+const D = window.Dither, $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const W = 640, H = 360, stage = $('#stage'), bg = $('#bg'), bx = bg.getContext('2d');
+const slides = $$('.sl'), PALS = ['ember', 'moss', 'frost', 'ghost', 'blood', 'bone'];
+let S = 2, cur = 0, frag = 0, pal = 'ember', slideT = performance.now();
+D.Sound.on = true;
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+/* ---------- layout ---------- */
+function fit() {
+  S = Math.floor(Math.min(innerWidth / W, innerHeight / H)); if (S < 1) S = Math.min(innerWidth / W, innerHeight / H);
+  const w = Math.round(W * S), h = Math.round(H * S);
+  Object.assign(stage.style, {width: w + 'px', height: h + 'px', left: Math.floor((innerWidth - w) / 2) + 'px', top: Math.floor((innerHeight - h) / 2) + 'px'});
+  stage.style.setProperty('--u', S + 'px');
+  paintPanels(); paintBars();
+}
+addEventListener('resize', fit);
+function paintPanels() { $$('.panel').forEach(p => D.bg(p, .7, '#05040a', null, S)); }
+
+/* ---------- backgrounds (160 x 90, dithered) ---------- */
+const BW = 160, BH = 90, bb = new D.Buffer(BW, BH);
+const h32 = (x, y) => { let h = x * 374761393 + y * 668265263; h = (h ^ (h >> 13)) * 1274126177; return ((h ^ (h >> 16)) >>> 0) / 4294967295; };
+function vn(x, y) { const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi, s = t => t * t * (3 - 2 * t); const a = h32(xi, yi), b = h32(xi + 1, yi), c = h32(xi, yi + 1), d = h32(xi + 1, yi + 1); return a + (b - a) * s(xf) + (c - a) * s(yf) + (a - b - c + d) * s(xf) * s(yf); }
+const put = (x, y, c) => { x = Math.round(x); y = Math.round(y); if (x >= 0 && x < BW && y >= 0 && y < BH) bb.px[y * BW + x] = c; };
+
+function drawBg(kind, t, age) {
+  const P = D.PALETTES[kind === 'blood' ? 'blood' : pal].map(D.u32), px = bb.px;
+  for (let y = 0; y < BH; y++) for (let x = 0; x < BW; x++) {
+    let v;
+    if (kind === 'fire') {
+      const base = Math.max(0, (y - 26) / 62);
+      const n = vn(x / 6, y / 5 + t * 2.4) * .7 + vn(x / 2.5, y / 2.5 + t * 4.5) * .3;
+      v = .04 + y / BH * .06 + Math.max(0, base * base * 1.35 * (.45 + n * .9) - .1);
+      if (y > 85) v = .03;
+    } else if (kind === 'night') {
+      v = .06 + y / BH * .26;
+      if (h32(x, y) > .985 && Math.sin(t * 2 + h32(y, x) * 40) > 0) v = .9;
+      const hz = 76 + Math.sin(x * .07 + 2) * 4;
+      if (y > hz) v = .02 + Math.max(0, 1 - Math.hypot(x - 80, y - 90) / 30) * .25 * (1 + Math.sin(t * 9) * .1);
+    } else if (kind === 'cave') {
+      const n = vn(x / 7, y / 7) * .6 + vn(x / 3, y / 3) * .4;
+      v = .05 + n * .16 + Math.max(0, 1 - Math.hypot(x - 27, y - 50) / 46) * .34 * (1 + Math.sin(t * 8) * .04);
+    } else if (kind === 'blood') {
+      v = .08 + Math.abs(Math.sin((x + y) * .12 + t * 1.5)) * .12 + y / BH * .18;
+    } else if (kind === 'swarm') {
+      v = .05 + y / BH * .07 + (x === 80 && y % 4 < 2 && y > 22) * .2;
+    } else {
+      v = .07 + ((Math.floor(x / 8) + Math.floor(y / 8)) % 2) * .05 + Math.max(0, 1 - Math.hypot(x - 120, y - 30) / 70) * .15;
+      if (kind === 'chart') v = .05 + y / BH * .05;
+    }
+    px[y * BW + x] = P[D.q(v, 8, x, y)];
+  }
+  if (kind === 'fire') {
+    for (let i = 0; i < 42; i++) {
+      const sp = .35 + h32(i, 2) * .65, yy = BH - ((t * 16 * sp + h32(i, 3) * BH) % BH);
+      if (yy > 72) continue;
+      put(h32(i, 1) * BW + Math.sin(t * 2 + i) * 2, yy, P[(h32(i, 5) + t) % 1 > .5 ? 7 : 6]);
+    }
+  }
+  if (kind === 'swarm') drawSwarm(t, age, P);
+  if (kind === 'chart') drawChart(age, P);
+  bb.blit(bx, BW, BH);
+}
+
+/* swarm: left half wanders with no traces, right half follows a trail it keeps laying */
+function trail(s) { return [96 + s * 50 + Math.sin(s * 6.5) * 7, 76 - s * 56]; }
+function drawSwarm(t, age, P) {
+  const lay = Math.min(1, age / 5000), ant = P[7];
+  for (let i = 0; i <= 240; i++) {
+    const s = i / 240, [x, y] = trail(s);
+    for (let w = -1; w <= 1; w++) if (D.t8(Math.round(x) + w, Math.round(y)) < lay * (w ? .55 : 1) && s < lay * 1.15) put(x + w, y, P[w ? 3 : 5]);
+  }
+  for (let i = 0; i < 46; i++) {
+    let s = (h32(i, 4) + t * .09 * (.6 + h32(i, 9) * .5)) % 1; if (i % 2) s = 1 - s;
+    s = Math.min(s, lay * 1.1);
+    const [x, y] = trail(s), j = (vn(i * 3.3, t * 3) - .5) * 4;
+    put(x + j, y + (vn(i * 5.1, t * 3) - .5) * 3, ant);
+  }
+  for (let i = 0; i < 46; i++) {
+    const x = 6 + vn(i * 7.3, t * .9) * 72, y = 30 + vn(i * 3.7 + 50, t * .9) * 54;
+    put(Math.min(78, x), y, ant);
+  }
+  put(20, 80, P[6]); put(21, 80, P[6]); put(96, 76, P[6]); put(97, 76, P[6]);
+}
+
+/* chart: static skills stay flat, habits fall */
+function drawChart(age, P) {
+  const x0 = 16, x1 = 98, y0 = 34, y1 = 78, len = Math.min(1, age / 2200), ax = P[4];
+  for (let x = x0; x <= x1; x++) put(x, y1, ax);
+  for (let y = y0; y <= y1; y++) put(x0, y, ax);
+  for (let x = x0 + 1; x <= x0 + (x1 - x0) * len; x++) {
+    const k = (x - x0) / (x1 - x0);
+    const ys = 42 + (vn(x / 3, 1) - .5) * 4;
+    if (x % 3) put(x, ys, P[5]);
+    const yh = 42 + 30 * (1 - Math.exp(-k * 3.2)) + (vn(x / 3, 7) - .5) * 3;
+    put(x, yh, P[7]); put(x, yh + 1, P[6]);
+  }
+}
+
+/* ---------- layers (character select) ---------- */
+const L = [
+  ['Name', '&#xE000;', [0, 1, 0], 'NEVER &middot; NOBODY'],
+  ['Contract', '&#xE003;', [1, 3, 1], 'RARELY &middot; A HUMAN'],
+  ['Hints', '&#xE001;', [5, 1, 5], 'FREELY &middot; THE HARNESS'],
+  ['Scripts', '&#xE004;', [2, 5, 2], 'VERSIONED &middot; TESTS + YES']];
+let li = 0, lt = 0;
+function renderLayers() {
+  $('#cards').innerHTML = L.map(([n, ic], i) => `<div class="card ${i === li ? 'sel' : ''}" data-i="${i}"><div class="s lan">${ic}</div><div class="p8 ${i === li ? 'acc' : 'faint'}" style="margin-top:calc(10*var(--u))">${n.toUpperCase()}</div></div>`).join('');
+  $$('#cards .card').forEach(el => el.onclick = e => { e.stopPropagation(); li = +el.dataset.i; lt = performance.now() + 4000; D.Sound.move(); renderLayers(); });
+  const [n, ic, s, who] = L[li], acc = css('--acc');
+  $('#lstats').innerHTML = `<div class="lan g48 ctr">${ic}</div><div class="g16 ink ctr" style="margin:calc(4*var(--u)) 0 calc(10*var(--u))">${n}</div>` +
+    [['CHANGES', s[0]], ['RISK', s[1]], ['AUTO', s[2]]].map(([k, v]) => `<div class="stat"><span class="p8 dim">${k}</span><i data-v="${v}"></i></div>`).join('') +
+    `<div class="p8 acc ctr" style="margin-top:calc(8*var(--u))">${who}</div>`;
+  $$('#lstats i').forEach(i => D.bg(i, .08 + i.dataset.v / 5 * .9, acc, '#1a1622', S));
+  paintPanels();
+}
+
+/* ---------- bars ---------- */
+function paintBars() {
+  const acc = css('--acc');
+  $$('.agent .bar').forEach(b => D.bg(b, .25 + b.dataset.p * .75, acc, '#1a1622', S));
+  const pr = $('#press'); if (pr) D.bg(pr, .85, '#e2453c', '#1a1622', S);
+}
+function growBars(s) { s.querySelectorAll('.agent .bar').forEach(b => { b.style.width = '0'; requestAnimationFrame(() => requestAnimationFrame(() => { b.style.width = Math.max(2, b.dataset.p * 100) + '%'; })); }); }
+
+/* ---------- boss ---------- */
+let boom = 0;
+function bossHit(n) {
+  const hp = Math.max(0, 100 - n * 34); $('#bosshp').style.width = hp + '%'; $('#bosslbl').textContent = `HP ${hp} / 100`;
+  const a = $('#bossA'); a.style.filter = hp > 0 ? `blur(${hp / 34}px)` : 'none'; a.style.transform = hp > 34 ? 'scale(1.07)' : 'none';
+  if (n) D.Sound.hurt();
+  if (hp === 0) { D.Sound.coin(); boom = performance.now(); }
+}
+
+/* ---------- tokens ---------- */
+let tokens = 0, lastT = performance.now();
+function burnRate() { const s = slides[cur]; return s.classList.contains('boss') ? 9000 : s.dataset.bg === 'fire' ? 4200 : 1400 + cur * 300; }
+
+/* ---------- navigation ---------- */
+const PATTERNS = ['iris', 'blinds', 'diamond', 'sweep', 'rain', 'bayer'];
+let busy = false, over = false;
+function go(i) {
+  if (i < 0 || i >= slides.length || busy || i === cur) return;
+  busy = true; D.Sound.ok();
+  D.transition({pattern: PATTERNS[i % PATTERNS.length], color: '#05040a', cell: Math.max(2, Math.round(S * 2)), ms: 280, mid: () => { cur = i; frag = 0; show(); }}).then(() => busy = false);
+}
+function show() {
+  slides.forEach((s, k) => s.classList.toggle('on', k === cur));
+  const s = slides[cur]; slideT = performance.now();
+  s.querySelectorAll('.frag').forEach(f => f.classList.remove('in'));
+  $('#world').textContent = s.dataset.w;
+  $('#prog').innerHTML = '▓'.repeat(cur + 1) + `<span>${'░'.repeat(slides.length - cur - 1)}</span>`;
+  const lost = Math.min(3, Math.floor(cur / 4));
+  $('#hearts').textContent = '♥'.repeat(3 - lost) + '♡'.repeat(lost);
+  if (s.classList.contains('boss')) bossHit(0);
+  if (s.querySelector('#cards')) { li = 0; lt = performance.now() + 1400; renderLayers(); }
+  if (s.querySelector('.agent')) growBars(s);
+  const pr = s.querySelector('#press'); if (pr) { pr.style.width = '0'; requestAnimationFrame(() => requestAnimationFrame(() => { pr.style.width = '100%'; })); }
+  if (s.querySelector('#cont')) { over = false; $('#cont').style.color = ''; }
+  paintPanels(); paintBars();
+}
+function next() {
+  const fr = [...slides[cur].querySelectorAll('.frag')];
+  if (frag < fr.length) { fr[frag].classList.add('in'); frag++; D.Sound.coin(); tokens += 2500; if (slides[cur].classList.contains('boss')) bossHit(Math.min(3, frag)); return; }
+  if (cur === slides.length - 1) return;
+  go(cur + 1);
+}
+function prev() { if (cur === slides.length - 1 && over) { tokens = 0; go(0); return; } go(cur - 1); }
+addEventListener('keydown', e => {
+  D.Sound.ensure();
+  if (['ArrowRight', ' ', 'PageDown', 'Enter'].includes(e.key)) { e.preventDefault(); next(); }
+  else if (['ArrowLeft', 'PageUp', 'Backspace'].includes(e.key)) { e.preventDefault(); prev(); }
+  else if (e.key === 'Home') go(0); else if (e.key === 'End') go(slides.length - 1);
+  else if (e.key === 'p' || e.key === 'P') { pal = PALS[(PALS.indexOf(pal) + 1) % PALS.length]; document.documentElement.dataset.pal = pal; paintBars(); if (slides[cur].querySelector('#cards')) renderLayers(); D.Sound.move(); }
+  else if (e.key === 'm' || e.key === 'M') { D.Sound.on = !D.Sound.on; }
+  else if (e.key === 'f' || e.key === 'F') { try { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen().catch(() => {}); } catch (err) {} }
+});
+$('#tap').addEventListener('click', e => { D.Sound.ensure(); (e.clientX < innerWidth / 3 ? prev : next)(); });
+let tx0 = null; addEventListener('touchstart', e => { tx0 = e.touches[0].clientX; }, {passive: true});
+addEventListener('touchend', e => { if (tx0 == null) return; const dx = e.changedTouches[0].clientX - tx0; if (Math.abs(dx) > 40) (dx < 0 ? next : prev)(); tx0 = null; });
+
+/* ---------- loop ---------- */
+let last = 0;
+function loop(now) {
+  const t = now / 1000;
+  tokens += (now - lastT) / 1000 * burnRate(); lastT = now;
+  if (now - last > 50) {
+    last = now;
+    const s = slides[cur], age = now - slideT;
+    drawBg(s.dataset.bg, t, age);
+    $('#tok').textContent = String(Math.floor(tokens) % 1e7).padStart(7, '0');
+    if (s.querySelector('#cards') && now > lt) { lt = now + 1600; li = (li + 1) % L.length; renderLayers(); }
+    if (s.querySelector('#cont')) { const k = 9 - Math.floor(age / 1000); if (k >= 0) $('#cont').textContent = 'CONTINUE? ' + k; else if (!over) { over = true; $('#cont').textContent = 'GAME OVER'; $('#cont').style.color = '#e2453c'; D.Sound.hurt(); } }
+    if (boom && now - boom < 1400 && s.classList.contains('boss')) {
+      const k = (now - boom) / 1400, px = bb.px, C = D.u32(css('--hi'));
+      for (let i = 0; i < 120; i++) { const a = h32(i, 3) * 6.283, r = k * (20 + h32(i, 7) * 40); const x = Math.round(117 + Math.cos(a) * r), y = Math.round(36 + Math.sin(a) * r * .8 + k * k * 20); if (x >= 0 && x < BW && y >= 0 && y < BH && D.t8(x, y) > k) px[y * BW + x] = C; }
+      bb.blit(bx, BW, BH);
+    }
+  }
+  requestAnimationFrame(loop);
+}
+bg.width = BW; bg.height = BH;
+document.fonts.ready.then(() => { fit(); show(); requestAnimationFrame(loop); });
+})();
+</script>
+</body>
+</html>
