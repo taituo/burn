@@ -1,0 +1,145 @@
+/* burn — set in Gloam by Tuomas Taini */
+@font-face{font-family:"Gloam";src:url(../fonts/Gloam-Regular.woff2) format("woff2");font-display:block}
+@font-face{font-family:"Gloam Bone";src:url(../fonts/GloamBone-Regular.woff2) format("woff2");font-display:block}
+@font-face{font-family:"Gloam Bone Mono";src:url(../fonts/GloamBoneMono-Regular.woff2) format("woff2");font-display:block}
+@font-face{font-family:"Gloam Lantern";src:url(../fonts/GloamLantern-Regular.woff2) format("woff2");font-display:block}
+@font-face{font-family:"Gloam Bone Lantern";src:url(../fonts/GloamBoneLantern-Regular.woff2) format("woff2");font-display:block}
+@font-palette-values --ember{font-family:"Gloam Lantern";base-palette:0}
+@font-palette-values --moss{font-family:"Gloam Lantern";base-palette:1}
+@font-palette-values --frost{font-family:"Gloam Lantern";base-palette:2}
+@font-palette-values --ghost{font-family:"Gloam Lantern";base-palette:3}
+@font-palette-values --blood{font-family:"Gloam Lantern";base-palette:4}
+@font-palette-values --bone{font-family:"Gloam Lantern";base-palette:5}
+
+:root{
+  --bg:#0b0910;--bg2:#110e17;--panel:#16121d;--line:#2a2335;--line2:#3a3048;
+  --ink:#ebe3cf;--dim:#8d849b;--faint:#4a4256;
+  --acc:#f2c23a;--hi:#fff1a8;--halo:#2a1405;
+}
+html[data-pal=ember]{--acc:#f2c23a;--hi:#fff1a8;--halo:#2a1405}
+html[data-pal=moss]{--acc:#9fd14f;--hi:#e8ffb4;--halo:#16260c}
+html[data-pal=frost]{--acc:#6fbef0;--hi:#e4f7ff;--halo:#0f1d38}
+html[data-pal=ghost]{--acc:#c6b6f2;--hi:#ffffff;--halo:#22183a}
+html[data-pal=blood]{--acc:#e2453c;--hi:#ffc0a8;--halo:#2e0707}
+html[data-pal=bone]{--acc:#e9dfc4;--hi:#ffffff;--halo:#2b251a}
+.lan{font-family:"Gloam Lantern","Gloam",monospace;font-palette:--ember}
+html[data-pal=moss] .lan{font-palette:--moss}
+html[data-pal=frost] .lan{font-palette:--frost}
+html[data-pal=ghost] .lan{font-palette:--ghost}
+html[data-pal=blood] .lan{font-palette:--blood}
+html[data-pal=bone] .lan{font-palette:--bone}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--bg);color:var(--ink);scroll-behavior:smooth}
+body{font:16px/28px "Gloam",monospace;-webkit-font-smoothing:none;-moz-osx-font-smoothing:unset;font-smooth:never;text-rendering:optimizeSpeed;
+  background:radial-gradient(1200px 600px at 50% -10%,color-mix(in srgb,var(--acc) 7%,transparent),transparent 70%),var(--bg);
+  min-height:100vh;overflow-x:hidden}
+a{color:inherit}
+::selection{background:var(--acc);color:var(--bg)}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+.wrap{max-width:1152px;margin:0 auto;padding:0 32px}
+.col{max-width:800px;margin:0 auto;padding:0 32px}
+.mono{font-family:"Gloam Bone Mono",monospace;text-transform:uppercase;letter-spacing:0}
+.dim{color:var(--dim)}.faint{color:var(--faint)}.acc{color:var(--acc)}
+
+/* pixel frame */
+.px{position:relative;background:var(--panel);margin:4px;
+  box-shadow:0 -4px 0 0 var(--line),0 4px 0 0 var(--line),-4px 0 0 0 var(--line),4px 0 0 0 var(--line)}
+a.px{display:block;text-decoration:none;transition:transform .08s steps(1)}
+a.px:hover{box-shadow:0 -4px 0 0 var(--acc),0 4px 0 0 var(--acc),-4px 0 0 0 var(--acc),4px 0 0 0 var(--acc);transform:translateY(-2px)}
+
+/* header */
+header.bar{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(6px);border-bottom:2px solid var(--line)}
+header .in{display:flex;align-items:center;gap:24px;height:64px}
+.mark{font-size:32px;line-height:32px;text-decoration:none}
+nav{display:flex;gap:20px;margin-left:8px}
+nav a{text-decoration:none;color:var(--dim)}nav a:hover{color:var(--acc)}
+.tools{margin-left:auto;display:flex;align-items:center;gap:16px}
+.chip{padding:6px 10px;line-height:16px;color:var(--dim);box-shadow:inset 0 0 0 2px var(--line)}
+.chip[aria-pressed=true]{color:var(--bg);background:var(--acc);box-shadow:none}
+.pals{display:flex;gap:6px}
+.pals button{width:20px;height:20px;box-shadow:inset 0 0 0 2px var(--bg)}
+.pals button[aria-pressed=true]{outline:2px solid var(--ink);outline-offset:2px}
+
+/* embers: dithered glow */
+.embers{display:grid;grid-template-rows:12px 12px 12px 8px}
+.embers i{display:block;background:var(--acc)}
+.embers i:nth-child(1){opacity:.5;-webkit-mask:repeating-conic-gradient(#000 0 25%,transparent 0 100%) 0 0/8px 8px;mask:repeating-conic-gradient(#000 0 25%,transparent 0 100%) 0 0/8px 8px}
+.embers i:nth-child(2){opacity:.7;-webkit-mask:repeating-conic-gradient(#000 0 25%,transparent 0 100%) 0 0/4px 4px;mask:repeating-conic-gradient(#000 0 25%,transparent 0 100%) 0 0/4px 4px}
+.embers i:nth-child(3){-webkit-mask:repeating-conic-gradient(#000 0 25%,transparent 0 50%) 0 0/4px 4px;mask:repeating-conic-gradient(#000 0 25%,transparent 0 50%) 0 0/4px 4px}
+.embers i:nth-child(4){background:var(--acc)}
+
+/* hero (index) */
+.hero{padding-top:96px;padding-bottom:48px}
+.kicker{color:var(--acc);margin-bottom:16px}
+.kicker::before{content:"\25B6  "}
+.hero h1{font-weight:normal;font-size:64px;line-height:80px;max-width:1088px}
+.hero h1 b{font-weight:normal;color:var(--acc)}
+.hero .sub{color:var(--dim);margin-top:24px;max-width:640px}
+.list{display:grid;gap:24px;padding:48px 0 96px}
+.card{padding:24px 28px 28px}
+.card .meta{color:var(--dim);font-size:16px;line-height:24px}
+.card h3{font-weight:normal;font-size:32px;line-height:48px;color:var(--acc);margin-top:8px}
+.card p{color:var(--dim);margin-top:8px;max-width:720px}
+.card .go{color:var(--ink);margin-top:16px;display:inline-block}
+.card:hover .go{color:var(--acc)}
+.sect{color:var(--dim);border-bottom:2px solid var(--line);padding-bottom:12px}
+
+/* article */
+.post-head{padding-top:80px;padding-bottom:40px}
+.post-head h1{font-weight:normal;font-size:48px;line-height:64px}
+.post-head .meta{color:var(--dim);margin-top:24px;display:flex;flex-wrap:wrap;gap:8px 24px}
+.post-head .meta b{color:var(--acc);font-weight:normal}
+.post-head .sum{color:var(--dim);margin-top:24px}
+.prose{padding-top:8px;padding-bottom:96px;color:var(--ink)}
+.prose>*+*{margin-top:20px}
+.prose h2{font:32px/48px "Gloam Bone Mono",monospace;text-transform:uppercase;color:var(--acc);margin-top:80px;padding-top:24px;border-top:2px solid var(--line)}
+.prose h2::before{content:"\25B6\00a0";color:var(--acc)}
+.prose h3{font:16px/24px "Gloam Bone Mono",monospace;text-transform:uppercase;color:var(--ink);margin-top:48px;padding-left:12px;box-shadow:inset 4px 0 0 var(--acc)}
+.prose h2+h3{margin-top:32px}
+.prose strong{font-weight:normal;color:var(--acc)}
+.prose em{font-style:normal;color:var(--dim)}
+.prose em strong,.prose strong em{color:var(--hi)}
+.prose a{color:var(--acc)}
+.prose ul,.prose ol{padding-left:28px}
+.prose li+li{margin-top:8px}
+.prose li>ul,.prose li>ol{margin-top:8px}
+.prose ul>li{list-style:none;position:relative}
+.prose ul>li::before{content:"";position:absolute;left:-20px;top:10px;width:8px;height:8px;background:var(--acc)}
+.prose ul ul>li::before{background:var(--faint)}
+.prose ol>li::marker{font-family:"Gloam Bone Mono",monospace;color:var(--acc)}
+.prose code{font-family:"Gloam Bone Mono",monospace;background:var(--panel);color:var(--hi);padding:2px 6px;box-shadow:inset 0 0 0 2px var(--line)}
+.prose pre{font:16px/16px "Gloam Bone Mono",monospace;background:#0e0c14;margin:28px 4px;padding:24px;overflow:auto;
+  box-shadow:0 -4px 0 0 var(--line2),0 4px 0 0 var(--line2),-4px 0 0 0 var(--line2),4px 0 0 0 var(--line2)}
+.prose pre code{font:16px/16px "Gloam Bone Mono",monospace;background:none;box-shadow:none;padding:0;color:var(--ink);white-space:pre}
+.prose table{border-collapse:collapse;width:calc(100% - 8px);margin:28px 4px;background:var(--panel);
+  box-shadow:0 -4px 0 0 var(--line),0 4px 0 0 var(--line),-4px 0 0 0 var(--line),4px 0 0 0 var(--line)}
+.prose th{font:16px/24px "Gloam Bone Mono",monospace;text-transform:uppercase;color:var(--acc);text-align:left;padding:12px 16px;border-bottom:2px solid var(--line2)}
+.prose td{padding:12px 16px;border-top:2px solid var(--line);vertical-align:top}
+.prose td strong{color:var(--ink)}
+.prose blockquote{color:var(--dim);padding-left:16px;box-shadow:inset 4px 0 0 var(--line2)}
+.prose hr{border:0;height:2px;background:var(--line)}
+.back{display:inline-block;margin-top:48px;text-decoration:none;color:var(--dim)}
+.back:hover{color:var(--acc)}
+
+/* MONO reading mode: the whole text in uppercase Bone Mono */
+html[data-type=mono] .prose,html[data-type=mono] .post-head .sum,html[data-type=mono] .card p,html[data-type=mono] .hero .sub{
+  font-family:"Gloam Bone Mono",monospace;text-transform:uppercase;line-height:28px}
+html[data-type=mono] .prose code{text-transform:none}
+
+footer{border-top:2px solid var(--line);padding:32px 0 48px;color:var(--faint)}
+footer .in{display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between}
+footer a{color:var(--dim);text-decoration:none}footer a:hover{color:var(--acc)}
+
+@media (max-width:760px){
+  .wrap,.col{padding:0 16px}
+  header .in{gap:12px}
+  nav{gap:12px;margin-left:0}
+  .pals{display:none}
+  .hero{padding-top:56px;padding-bottom:32px}
+  .hero h1{font-size:32px;line-height:48px}
+  .post-head{padding-top:48px;padding-bottom:24px}
+  .post-head h1{font-size:32px;line-height:48px}
+  .prose h2{font-size:16px;line-height:24px;margin-top:56px}
+  .card h3{font-size:16px;line-height:24px}
+}

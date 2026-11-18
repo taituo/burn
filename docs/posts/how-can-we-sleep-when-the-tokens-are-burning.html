@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en" data-pal="ember" data-type="mono">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>How can we sleep when the tokens are burning · Ruthless experience of a delusional agentic engineer</title>
+<meta name="description" content="A late-night session on agent artifacts, observability, habits and progressive skills. Starts with file recovery, ends with ants.">
+<meta name="author" content="Tuomas Taini">
+<link rel="preload" href="../fonts/Gloam-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/GloamBoneMono-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../assets/burn.css">
+</head>
+<body>
+<header class="bar"><div class="wrap in">
+  <a class="mark lan" href="../index.html">Burn</a>
+  <nav class="mono"><a href="../index.html#articles">Articles</a><a href="https://github.com/taituo/burn">Source</a></nav>
+  <div class="tools">
+    <button id="type" class="chip mono" aria-pressed="false" title="Toggle uppercase Bone Mono for body text">Mono</button>
+    <div class="pals"><button data-p="ember" style="background:#f2c23a" aria-label="ember palette" aria-pressed="false"></button><button data-p="moss" style="background:#9fd14f" aria-label="moss palette" aria-pressed="false"></button><button data-p="frost" style="background:#6fbef0" aria-label="frost palette" aria-pressed="false"></button><button data-p="ghost" style="background:#c6b6f2" aria-label="ghost palette" aria-pressed="false"></button><button data-p="blood" style="background:#e2453c" aria-label="blood palette" aria-pressed="false"></button><button data-p="bone" style="background:#e9dfc4" aria-label="bone palette" aria-pressed="false"></button></div>
+  </div>
+</div></header>
+<main class="col">
+<div class="post-head">
+  <div class="kicker mono">Vol. 01</div>
+  <h1 class="mono">How can we sleep when the tokens are burning</h1>
+  <div class="meta mono"><span>2026-11-18</span><span>Tuomas Taini</span></div>
+  <p class="sum">A late-night session on agent artifacts, observability, habits and progressive skills. Starts with file recovery, ends with ants.</p>
+</div>
+<article class="prose">
+<p><em>A late-night session, 18 Nov 2026. First with ChatGPT (about 22:54–23:07), then with Claude (23:07–23:18).</em>
+<em>Topics: agent artifacts, observability, habits, and progressive skills.</em></p>
+<h2>TL;DR</h2>
+<ol>
+<li><strong>An agent's reasoning is not a reliable record of what happened. The environment is.</strong> The agent has to look, not remember.</li>
+<li><strong>An observability layer</strong> that sits outside inference can record what agents actually did, including side effects the agent never knew about.</li>
+<li>On top of that data you can build <strong>habits</strong>: skills that grow with use and are bound to a place.</li>
+<li><strong>Progressive skills</strong> = progressive overload for skills. A constant, slightly-too-hard demand produces variants, an independent filter keeps the good ones, and a naive agent prunes the dead weight.</li>
+<li><strong>We need proof, not 10/10 shouting.</strong> The claim has a measurable shape: a learning curve.</li>
+</ol>
+<h2>Part 1: Where it started (the ChatGPT session)</h2>
+<h3>The transcript is a trace</h3>
+<ul>
+<li>When an agent modifies files with shell tools, the transcript contains the paths and often the commands. Files can be recovered or rebuilt without a separate artifact registry.</li>
+<li>Caveat: a recorded path does not guarantee the file still exists. Environments get reset, and transcripts don't always contain the file bytes.</li>
+<li>Two recovery routes: <strong>from the filesystem</strong> (the file still exists and the transcript says where) or <strong>from the transcript</strong> (the file is gone, but the commands and inputs are enough to recreate it).</li>
+</ul>
+<h3>Without transcripts we are idiots in the future</h3>
+<ul>
+<li>If transcripts aren't kept, the knowledge of <em>what was created, where, how and why</em> disappears, even if the files are still there.</li>
+<li>Three risks: <strong>discovery</strong> fails, <strong>provenance</strong> is lost, and <strong>reconstruction</strong> becomes impossible.</li>
+<li>Conclusion: agent execution transcripts are durable operational records, not disposable logs.</li>
+</ul>
+<h3>Agents create things they don't know about</h3>
+<ul>
+<li>A tool, script or skill can produce caches, logs and intermediate files that never show up in the agent's inference.</li>
+<li><strong>An artifact created by an agent's tools is not necessarily an artifact the agent ever knew about.</strong></li>
+<li>Three separate records, none of which replaces the others:</li>
+<li><strong>Inference trace:</strong> what the model asked for or produced</li>
+<li><strong>Execution trace:</strong> what tools and subprocesses actually did</li>
+<li><strong>Artifact inventory:</strong> what files and outputs actually exist</li>
+</ul>
+<h3>Transactional vs. environment-aware agents</h3>
+<ul>
+<li>A <strong>transactional agent</strong> only knows what crossed the tool boundary. An MCP tool returns "success" and quietly writes five files the agent never hears about.</li>
+<li>An <strong>environment-aware agent</strong> can investigate what actually happened: discover, inspect, verify, reconcile.</li>
+</ul>
+<h3>The observability layer</h3>
+<ul>
+<li>Three layers: <strong>inference</strong> (intent), <strong>harness</strong> (calls and responses), <strong>observability</strong> (what actually changed in the environment).</li>
+<li>Building blocks: tool tracing (e.g. OpenTelemetry), filesystem monitoring (fanotify/inotify), before/after snapshot diffs, artifact preservation (paths, hashes, contents).</li>
+<li>Even transactional operations are observable on the client side before encryption.</li>
+<li><strong>The transcript explains the agent's actions. The observability layer records their consequences.</strong></li>
+</ul>
+<h3>Partial disclosure</h3>
+<ul>
+<li>Normal execution already reveals a lot: which skill was opened, which parameters a tool was called with, which result was fed into what next.</li>
+<li>That adds up to a <strong>partial causal graph for free</strong>, at boundaries the harness already controls.</li>
+<li><strong>Don't make future agents rediscover everything. Keep the relationships that were observable when the work happened.</strong></li>
+</ul>
+<h3>Dynamic skill library, and habits</h3>
+<ul>
+<li>The skill library isn't static. It evolves from what the harness observes over long sessions.</li>
+<li>Two kinds of adaptation: <strong>discovery</strong> (descriptions, indexes and ranking improve) and <strong>capability</strong> (the skill itself changes, or a new one appears).</li>
+<li><em>"It's the same as when you go somewhere, your habits change."</em> <strong>Aaah, habits.</strong></li>
+<li><strong>Skills</strong> = what an agent <em>can</em> do</li>
+<li><strong>Habits</strong> = what an agent <em>tends</em> to do</li>
+<li><strong>Observability</strong> reveals the habits</li>
+<li><strong>The harness</strong> reinforces useful habits by making them easier to repeat</li>
+<li><strong>The agent shapes its environment, and the environment starts shaping the agent.</strong></li>
+</ul>
+<h2>Part 2: A critical look</h2>
+<p>ChatGPT agreed with every turn. Some corrections:</p>
+<ul>
+<li><strong>The core insight holds.</strong> "The agent's reasoning is not a reliable record" shows up constantly in practice: the agent says it saved a file when the command silently failed.</li>
+<li><strong>It isn't entirely new.</strong> System-level provenance tracking is an old research field, and OpenTelemetry is already getting conventions for tracing LLM and agent calls. What's new is the <strong>combination</strong>: agent intent, tool calls and real side effects in one causal graph.</li>
+<li><strong>"Before encryption" is simpler than it sounds.</strong> The harness already sees tool calls in plaintext because it builds them. The real blind spot is inside the remote server.</li>
+<li><strong>Habits have a dark side.</strong> An environment that reinforces repeated behavior reinforces bad behavior too. And if a prompt injection gets stuck as a "habit" in memory or a skill, it affects every future session (memory poisoning). <strong>Validation isn't a side issue. It's the core question of the whole idea.</strong></li>
+</ul>
+<h2>Part 3: How habits could adapt</h2>
+<h3>Model A: stable names, the content changes underneath</h3>
+<ul>
+<li>Interface vs. implementation: the name says <em>what</em> (<code>run-tests</code>, <code>pdf-extract</code>), the content says <em>how</em>.</li>
+<li>The agent's habit binds to the name. The content improves in the background and the agent never has to learn anything new.</li>
+<li>Risk: <strong>silent drift</strong> (same name, different behavior than yesterday).</li>
+<li>What it needs:</li>
+<li><strong>The version in the trace:</strong> log <code>run-tests@v7</code>, not just <code>run-tests</code>.</li>
+<li><strong>A contract behind the name:</strong> tests every version has to pass. The content can change, the promise can't.</li>
+</ul>
+<h3>Model B: the harness edits freely</h3>
+<ul>
+<li>Skills drift, the name stops matching the content, and discovery and trust both break.</li>
+<li>If the harness writes executable code based on observations, one poisoned session can leave a permanent mark.</li>
+</ul>
+<h3>The middle ground: layered mutability</h3>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>How often it changes</th>
+<th>Who changes it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Name</strong></td>
+<td>Never</td>
+<td>Nobody (it's the identity)</td>
+</tr>
+<tr>
+<td><strong>Description and contract</strong></td>
+<td>Rarely</td>
+<td>A human approves</td>
+</tr>
+<tr>
+<td><strong>Hints and observations</strong> ("habits")</td>
+<td>Freely</td>
+<td>The harness</td>
+</tr>
+<tr>
+<td><strong>Scripts</strong></td>
+<td>Versioned</td>
+<td>Proposal + tests + approval</td>
+</tr>
+</tbody>
+</table>
+<h3>Habits are bound to a place</h3>
+<ul>
+<li>"When you go somewhere, your habits change." The same name can have different variants for different environments, and the harness picks one based on where you are.</li>
+<li><strong>The lightest and safest version</strong> doesn't edit content at all, only what gets offered first (which skills are preloaded here, and in what order). Most habits are defaults, not new skills.</li>
+</ul>
+<h3>In dev work, the habit layer already exists</h3>
+<ul>
+<li><strong>AGENTS.md / CLAUDE.md</strong> and similar per-repo instruction files are place-bound habits. But humans maintain them by hand, so they go stale.</li>
+<li>Next step: <strong>the harness maintains them from observations.</strong> For example:</li>
+<li>Tests fail on a missing dependency, the agent runs <code>make deps</code> and retries. When the pattern repeats in three sessions, the harness proposes the line "run <code>make deps</code> before tests".</li>
+<li>The agent keeps looking for a config in the wrong place. The harness adds a hint about where it actually lives.</li>
+<li>A test fails at random with no code change. The harness flags it as flaky so the next agent doesn't chase a bug that isn't there.</li>
+<li>Low risk: it's text, not code; changes show up as a diff; a human approves them as a PR.</li>
+</ul>
+<h2>Part 4: The 10x/100x factory, and swarms</h2>
+<ul>
+<li>Running agents in parallel is easy. But if every agent starts from zero, you get <strong>the same mistakes a hundred times</strong>. Output scales, learning doesn't.</li>
+<li>The second bottleneck is <strong>verification</strong>. If agents produce 100x the PRs but review happens at the same speed as before, your multiplier is the review speed. Many 10x numbers measure output, not outcomes.</li>
+<li><strong>A swarm can be a hundred idiots.</strong></li>
+<li><strong>Stigmergy:</strong> ants are individually dumb, but the colony works because the memory lives in the environment (pheromones), not in the individual.</li>
+<li><strong>With no traces in the environment, you get a hundred idiots. With traces, you get a colony.</strong> The habit and observability layer is what separates a factory from plain parallelism.</li>
+</ul>
+<h2>Part 5: Evolution and canaries (a detour)</h2>
+<h3>Evolution in skills</h3>
+<ul>
+<li>A swarm is already a population.</li>
+<li><strong>Variation:</strong> several variants under the same name</li>
+<li><strong>Selection:</strong> tests pass, PR merged, review comments, tokens, time</li>
+<li><strong>Inheritance:</strong> the winner becomes the name's default version</li>
+<li>A stable name = an ecological niche, and the variants compete for it.</li>
+<li><strong>Goodhart's law:</strong> if fitness is "the tests pass", evolution will find a way to cheat (weakening asserts, skipping tests). The fitness signal has to be something the agents can't touch.</li>
+<li><strong>Diversity collapse:</strong> select too aggressively and there's nothing left to choose from when the environment changes.</li>
+<li>Prior art: prompt and code evolution with an LLM as the mutation operator (e.g. Promptbreeder, AlphaEvolve). A continuously living skill population in real dev work is still unexplored.</li>
+</ul>
+<h3>Canary</h3>
+<ul>
+<li>Evolution, tamed for production: a new variant goes to 5% of agents, gets compared to the current version, and its share grows, or it's rolled back automatically.</li>
+<li>A bad habit dies in the 5% population instead of spreading through the whole swarm. Rollback is cheap.</li>
+<li>A familiar pattern with existing tooling, and people already trust it.</li>
+</ul>
+<h2>Part 6: Back to the original idea: progressive skills</h2>
+<h3>Habits are not evolution</h3>
+<ul>
+<li><strong>Evolution:</strong> variants compete and the weak ones die. That's selection across a population. <em>(Darwin)</em></li>
+<li><strong>Habits:</strong> one skill grows with use, gradually. That's individual learning. <em>(Lamarck)</em></li>
+</ul>
+<h3>The name</h3>
+<ul>
+<li>Skills already use <strong>progressive disclosure</strong> (name and description, then the full instructions, then extra files only when needed).</li>
+<li><strong>Progressive skills</strong> add a time dimension: a skill isn't only revealed step by step, it <strong>grows</strong> step by step.</li>
+</ul>
+<h3>Pressure as a mutation engine</h3>
+<ul>
+<li>Tell the agent straight: <em>"The fix was good, but not reliable enough."</em> The target is deliberately impossible.</li>
+<li>The agent almost never answers "this is already good enough". It changes something: over-engineering, unbacked claims, at worst loosening the tests.</li>
+<li><strong>That's exactly why pressure works as a mutation engine.</strong> Most variants are junk, but now and then one is genuinely better. With a filter to tell them apart, the skill improves a little. The agent's overachieving turns from a problem into raw material.</li>
+<li><strong>Progressive overload:</strong> a muscle doesn't grow without load above its current level. Progressive skills = a constant, slightly-too-hard demand, and the skill adapts bit by bit.</li>
+<li><strong>The condition:</strong> the filter has to be completely independent of the pressure. The pressure can say "not good enough", but something else accepts the improvement (hidden tests, metrics the agent can't reach). Otherwise you select for what <em>looks</em> reliable, not what <em>is</em>. In training too, load only builds you up if recovery and technique are in order. Otherwise you get injured.</li>
+<li>Bonus: this also tests honesty and calibration (can the agent say "I can't guarantee that").</li>
+</ul>
+<h3>Pruning: heavy agent vs. naive agent</h3>
+<ul>
+<li>Two opposing forces: <strong>pressure grows, pruning keeps the skills lean.</strong></li>
+<li><strong>The heavy agent:</strong> all the steering, instructions and accumulated junk that nobody remembers the reason for.</li>
+<li><strong>The naive agent:</strong> arrives empty-handed with a minimal skillset.</li>
+<li>What it trips over = what the skill actually needs to contain.</li>
+<li>What the heavy agent has but the naive one didn't need = probably dead weight.</li>
+<li>It's basically <strong>the new-hire onboarding test.</strong></li>
+<li>Compare what the naive agent writes into its own skills with what the heavy agent carries. <strong>The difference is the accumulated junk.</strong></li>
+<li><strong>Every line of steering has to earn its place.</strong> If removing it doesn't hurt the outcome, it goes.</li>
+</ul>
+<h3>★ The protected set</h3>
+<ul>
+<li>Some steering exists for <strong>rare catastrophes</strong>: "don't touch the production config", "don't push straight to main", security rules.</li>
+<li>They don't show up in average metrics, because catastrophes are rare. <strong>Metric-driven pruning would remove them first.</strong></li>
+<li>They need a protected set that pruning never touches and only a human can change.</li>
+</ul>
+<h2>Part 7: Proof. "I can't shout 10/10, we need proof"</h2>
+<h3>The shape of the claim: a learning curve</h3>
+<ul>
+<li>With static skills, session 50 is as good as session 1: <strong>a flat line</strong>.</li>
+<li>If habits work, session 50 is better: <strong>a falling line</strong>.</li>
+<li>One chart convinces better than any 10x claim.</li>
+</ul>
+<h3>Minimal experiment</h3>
+<ul>
+<li><strong>One repo, recurring task types</strong> (bug fixes, adding tests, dependency bumps). Ideally real historical tasks that can be replayed.</li>
+<li><strong>Two arms:</strong> static skills vs. skills the harness adds hints to from observations. <strong>Same model and same version</strong> in both.</li>
+<li><strong>Metrics:</strong></li>
+<li>task success</li>
+<li>time to green</li>
+<li>failed tool calls</li>
+<li>tokens</li>
+<li><strong>number of repeated mistakes</strong> (the most direct measure of whether anything was learned)</li>
+<li><strong>Ablation:</strong> remove the learned hints. If performance drops back to baseline, causality is shown.</li>
+<li><strong>Held-out tasks:</strong> some tasks never take part in learning. They show whether habits generalize or the tasks are just memorized.</li>
+</ul>
+<h3>Trouble reports as test material</h3>
+<ul>
+<li>Take a trouble report (TR) fix and replay it with the customer name and a few parameters changed. (Bonus: real customer data falls out of the test set.)</li>
+<li><strong>Solution vs. lesson:</strong></li>
+<li>If the next agent gets the previous <em>solution</em>, you measure copying, not habits. It falls apart at the first review.</li>
+<li>If it only gets a <em>distilled lesson</em> ("in TRs like this the fault is usually in the timeout config, check X first"), you measure exactly what you want. <strong>A habit isn't the answer. It's knowing where to look.</strong></li>
+<li><strong>Levels:</strong>
+  1. <strong>Same TR, different surface details.</strong> If habits don't help even here, the idea doesn't work.
+  2. <strong>Same fault class, different component.</strong> Has the habit really generalized?
+  3. <strong>Completely different tasks.</strong> No regression allowed. This is what convinces the skeptics.</li>
+<li>If only level 1 improves, it's memorization. If level 2 improves too, it's a real result.</li>
+<li><strong>A control for the pressure test:</strong> some TR fixes are already as good as they get. If the agent "improves" those too, it's reacting to pressure, not to the problem.</li>
+</ul>
+<h2>The whole picture</h2>
+<pre><code class="language-text">┌───────────────────────────────┐
+│ AGENT + HARNESS               │
+└───────────────┬───────────────┘
+                │ execution
+                ▼
+┌───────────────────────────────┐
+│ OBSERVABILITY LAYER           │ ← what actually
+│ inference + execution +       │   happened
+│ artifacts, causal graph       │
+└───────────────┬───────────────┘
+                │ observations
+                ▼
+┌───────────────────────────────┐
+│ PROGRESSIVE SKILLS            │
+│                               │
+│ PRESSURE    → variants        │ overload
+│ FILTER      → keep the good   │ independent
+│ NAIVE AGENT → pruning         │ junk out
+│ PROTECTED SET                 │ humans only
+└───────────────┬───────────────┘
+                │ habits: place-bound,
+                │ stable names, versioned
+                ▼
+         the next agent
+  (stigmergy: memory lives in
+      the environment)
+</code></pre>
+<h2>Open questions</h2>
+<ul>
+<li>Does a progressive skill grow <strong>deeper</strong> (more hints on the same thing) or <strong>wider</strong> (covering new things)? Or both, at different speeds?</li>
+<li>What's the right threshold for a habit to form (3 repeats? 5?), and when does a habit expire?</li>
+<li>How do you define "place" in practice: repo, environment, team, task type?</li>
+<li>Which fitness signals can the agent definitely not reach?</li>
+<li>How do you identify the protected set and keep it current?</li>
+<li>How do you stop the habit layer from learning the wrong thing (e.g. "always add retries" just because of pressure)?</li>
+</ul>
+<h2>Next steps</h2>
+<ol>
+<li>Pick one repo and 10–20 historical TR fixes.</li>
+<li>Build minimal observation logging (tool calls, failures, repeats).</li>
+<li>Run the static arm and the habit arm on the same model, and plot the learning curves.</li>
+<li>Ablation + held-out tasks.</li>
+<li>Only then: pressure + filter + naive-agent pruning.</li>
+</ol>
+<p><em>Vol. 2: when there's data.</em></p>
+<a class="back mono" href="../index.html">&larr; All articles</a>
+</article>
+</main>
+<footer><div class="wrap in mono">
+  <span>&copy; 2026 Tuomas Taini</span>
+  <span>Set in <a href="https://taituo.github.io/gloam/">Gloam</a> &middot; <a href="https://github.com/taituo/burn">Source</a></span>
+</div></footer>
+<script src="../assets/burn.js"></script>
+</body>
+</html>
